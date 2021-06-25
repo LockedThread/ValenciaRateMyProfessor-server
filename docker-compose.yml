@@ -1,0 +1,30 @@
+services:
+  server:
+    build: .
+    ports:
+      - "8080:8080"
+    volumes:
+      - .:/code
+      - logvolume01:/var/log
+    links:
+      - mongo
+    env_file:
+      - .env
+    networks:
+      - mongo_network
+  mongo:
+    image: mongo
+    command: "--bind_ip_all"
+    ports:
+      - "27017:27017"
+    volumes:
+      - "databaseVolume:/data/db"
+    networks:
+      - mongo_network
+volumes:
+  logvolume01: { }
+  databaseVolume: { }
+
+networks:
+  mongo_network:
+    name: mongo_network

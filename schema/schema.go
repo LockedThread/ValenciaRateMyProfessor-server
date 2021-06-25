@@ -1,13 +1,17 @@
 package schema
 
-import "github.com/graphql-go/graphql"
+import (
+	"github.com/graphql-go/graphql"
+	"server/database"
+	"server/models"
+)
 
 var QueryType = graphql.NewObject(
 	graphql.ObjectConfig{
 		Name: "Query",
 		Fields: graphql.Fields{
 			"professorById": &graphql.Field{
-				Type:        ProfessorType,
+				Type:        models.ProfessorType,
 				Description: "Get professor by id",
 				Args: graphql.FieldConfigArgument{
 					"id": &graphql.ArgumentConfig{
@@ -15,14 +19,16 @@ var QueryType = graphql.NewObject(
 					},
 				},
 				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-					return nil, nil
+					id := p.Args["id"].(string)
+					professorById := database.GetProfessorById(id)
+					return professorById, nil
 				},
 			},
 			"list": &graphql.Field{
-				Type:        graphql.NewList(ProfessorType),
+				Type:        graphql.NewList(models.ProfessorType),
 				Description: "Get product list",
 				Resolve: func(params graphql.ResolveParams) (interface{}, error) {
-					return nil, nil
+					return database.GetProfessors(), nil
 				},
 			},
 		},

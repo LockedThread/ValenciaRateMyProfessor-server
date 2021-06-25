@@ -9,49 +9,42 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 	"log"
 	"os"
-	"server/schema"
-	"time"
+	"server/models"
 )
 
 var (
 	Client mongo.Client
 )
 
-func Connect() {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(os.Getenv("MONGO_URI")))
+func Connect() *mongo.Client {
+	fmt.Printf("Connecting to database\n")
+	client, err := mongo.NewClient(options.Client().ApplyURI(os.Getenv("MONGO_URI")))
 	if err != nil {
-		panic(err)
-	}
-	defer func() {
-		if err = client.Disconnect(ctx); err != nil {
-			panic(err)
-		}
-	}()
-
-	if err := client.Ping(ctx, readpref.Primary()); err != nil {
-		panic(err)
+		log.Fatalln(err)
 	}
 
-	Client = *client
-	Setup()
+	err = client.Connect(context.Background())
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	if err = client.Ping(context.Background(), readpref.Primary()); err != nil {
+		log.Fatalln(err)
+	}
+	fmt.Printf("Connected to database\n")
+	return client
 }
 
-func Setup() {
-	// TODO: Setup some database setup methods
-}
-
-func GetProfessorById(id string) schema.Professor {
-	collection, ctx := getCollection("professors")
-	cursor := collection.FindOne(ctx, bson.M{
+func GetProfessorById(id string) models.Professor {
+	collection := getCollection("professors")
+	cursor := collection.FindOne(context.Background(), bson.M{
 		"teacherId": id,
 	})
 	if cursor.Err() != nil {
 		log.Fatalln(cursor.Err())
 	}
 
-	var professor schema.Professor
+	var professor models.Professor
 
 	if err := cursor.Decode(&professor); err != nil {
 		log.Fatalln(err)
@@ -60,17 +53,22 @@ func GetProfessorById(id string) schema.Professor {
 	return professor
 }
 
-func GetProfessors() []schema.Professor {
-	collection, ctx := getCollection("professors")
-	cursor, err := collection.Find(ctx, bson.M{})
+func GetProfessors() []models.Professor {
+	collection := getCollection("professors")
+	cursor, err := collection.Find(context.Background(), bson.M{})
 	if err != nil {
 		log.Fatalln(err)
 	}
-	defer cursor.Close(ctx)
+	defer func(cursor *mongo.Cursor, ctx context.Context) {
+		err := cursor.Close(ctx)
+		if err != nil {
+			log.Fatalln(err)
+		}
+	}(cursor, context.Background())
 
-	var professors []schema.Professor
+	var professors []models.Professor
 
-	if err = cursor.All(ctx, &professors); err != nil {
+	if err = cursor.All(context.Background(), &professors); err != nil {
 		log.Fatalln(err)
 	}
 	fmt.Printf("professors=%s", professors)
@@ -83,11 +81,9 @@ func getDatabase(database string) *mongo.Database {
 }
 
 func getDatabaseFromDefault() *mongo.Database {
-	return Client.Database("valencia-rate-my-professor")
+	return getDatabase("valencia-rate-my-professor")
 }
 
-func getCollection(collection string) (mongo.Collection, context.Context) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	return *getDatabaseFromDefault().Collection(collection), ctx
+func getCollection(collection string) mongo.Collection {
+	return *getDatabaseFromDefault().Collection(collection)
 }

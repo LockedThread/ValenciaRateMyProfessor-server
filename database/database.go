@@ -61,6 +61,23 @@ func GetProfessorById(id string) schema.Professor {
 	return professor
 }
 
+func GetProfessors() []schema.Professor {
+	collection, ctx := getCollection("professors")
+	cursor, err := collection.Find(ctx, bson.M{})
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer cursor.Close(ctx)
+
+	var professors []schema.Professor
+
+	if err = cursor.All(ctx, &professors); err != nil {
+		log.Fatalln(err)
+	}
+	fmt.Printf("professor=%s", professors)
+	return professors
+}
+
 // Utility methods
 func getDatabase(database string) *mongo.Database {
 	return Client.Database(database)

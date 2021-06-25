@@ -9,7 +9,7 @@ import (
 type Professor struct {
 	FullName     FullName
 	RatingsCount int
-	TeacherID    int
+	ProfessorID  int
 	Rating       string
 	Department   string
 	SchoolID     string
@@ -103,7 +103,7 @@ var ProfessorType = graphql.NewObject(graphql.ObjectConfig{
 		"rating": &graphql.Field{
 			Type: graphql.String,
 		},
-		"teacherId": &graphql.Field{
+		"professorId": &graphql.Field{
 			Type: graphql.Int,
 		},
 		"ratingsCount": &graphql.Field{

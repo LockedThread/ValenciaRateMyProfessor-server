@@ -2,11 +2,17 @@ package schema
 
 import (
 	"fmt"
+	"github.com/graphql-go/graphql"
 	"strings"
 )
 
 type Professor struct {
-	FullName FullName
+	FullName     FullName
+	RatingsCount int
+	TeacherID    int
+	Rating       string
+	Department   string
+	SchoolID     string
 }
 
 func (p Professor) FormattedString() string {
@@ -84,3 +90,27 @@ func GetFullNameFromString(name string) FullName {
 
 	return fullNameStruct
 }
+
+var ProfessorType = graphql.NewObject(graphql.ObjectConfig{
+	Name: "Professor",
+	Fields: graphql.Fields{
+		"schoolId": &graphql.Field{
+			Type: graphql.String,
+		},
+		"department": &graphql.Field{
+			Type: graphql.String,
+		},
+		"rating": &graphql.Field{
+			Type: graphql.String,
+		},
+		"teacherId": &graphql.Field{
+			Type: graphql.Int,
+		},
+		"ratingsCount": &graphql.Field{
+			Type: graphql.Int,
+		},
+		"fullName": &graphql.Field{
+			Type: graphql.String,
+		},
+	},
+})

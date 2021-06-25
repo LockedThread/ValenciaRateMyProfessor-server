@@ -6,14 +6,18 @@ import (
 	"github.com/graphql-go/handler"
 	"log"
 	"net/http"
+	"server/database"
 	"server/schema"
 )
 
 func main() {
+
+	database.Connect()
+
 	// SchemaObj
 	schemaConfig := graphql.SchemaConfig{
-		Query:    schema.QueryType,
-		Types:    []graphql.Type{schema.ProfessorType},
+		Query: schema.QueryType,
+		Types: []graphql.Type{schema.ProfessorType},
 	}
 	sc, err := graphql.NewSchema(schemaConfig)
 	if err != nil {

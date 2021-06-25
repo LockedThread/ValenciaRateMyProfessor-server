@@ -44,17 +44,16 @@ func Setup() {
 
 func GetProfessorById(id string) schema.Professor {
 	collection, ctx := getCollection("professors")
-	cursor, err := collection.Find(ctx, bson.M{
+	cursor := collection.FindOne(ctx, bson.M{
 		"teacherId": id,
 	})
-	if err != nil {
-		log.Fatalln(err)
+	if cursor.Err() != nil {
+		log.Fatalln(cursor.Err())
 	}
-	defer cursor.Close(ctx)
 
 	var professor schema.Professor
 
-	if err = cursor.All(ctx, &professor); err != nil {
+	if err := cursor.Decode(&professor); err != nil {
 		log.Fatalln(err)
 	}
 	fmt.Printf("professor=%s", professor)

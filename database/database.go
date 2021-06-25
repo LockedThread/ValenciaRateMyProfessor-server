@@ -74,7 +74,7 @@ func GetProfessors() []schema.Professor {
 	if err = cursor.All(ctx, &professors); err != nil {
 		log.Fatalln(err)
 	}
-	fmt.Printf("professor=%s", professors)
+	fmt.Printf("professors=%s", professors)
 	return professors
 }
 

@@ -7,7 +7,9 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
+	"log"
 	"os"
+	"server/schema"
 	"time"
 )
 
@@ -37,20 +39,39 @@ func Connect() {
 }
 
 func Setup() {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	databaseList, err := Client.ListDatabaseNames(ctx, bson.M{})
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("databaseList=%s\n", databaseList)
-
-	database := Client.Database("")
-
+	// TODO: Setup some database setup methods
 }
 
-func getDatabase(strings []string) *string {
-	for i := range strings {
-		strings[i] == ""
+func GetProfessorById(id string) schema.Professor {
+	collection, ctx := getCollection("professors")
+	cursor, err := collection.Find(ctx, bson.M{
+		"teacherId": id,
+	})
+	if err != nil {
+		log.Fatalln(err)
 	}
+	defer cursor.Close(ctx)
+
+	var professor schema.Professor
+
+	if err = cursor.All(ctx, &professor); err != nil {
+		log.Fatalln(err)
+	}
+	fmt.Printf("professor=%s", professor)
+	return professor
+}
+
+// Utility methods
+func getDatabase(database string) *mongo.Database {
+	return Client.Database(database)
+}
+
+func getDatabaseFromDefault() *mongo.Database {
+	return Client.Database("valencia-rate-my-professor")
+}
+
+func getCollection(collection string) (mongo.Collection, context.Context) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	return *getDatabaseFromDefault().Collection(collection), ctx
 }

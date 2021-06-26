@@ -3,113 +3,68 @@ package models
 import (
 	"fmt"
 	"github.com/graphql-go/graphql"
-	"strings"
+	"strconv"
 )
 
 type Professor struct {
-	FullName     FullName
-	RatingsCount int
-	ProfessorID  int
-	Rating       string
-	Department   string
-	SchoolID     string
+	Department      string `bson:"department"`
+	InstitutionName string `bson:"institutionName"`
+	FirstName       string `bson:"firstName"`
+	MiddleName      string `bson:"middleName"`
+	LastName        string `bson:"lastName"`
+	TeacherID       int    `bson:"teacherId"`
+	RatingsCount    int    `bson:"ratingCount"`
+	RatingClass     string `bson:"ratingClass"`
+	OverallRating   string `bson:"overallRating"`
 }
 
-func (p Professor) FormattedString() string {
-	return p.FullName.FormattedString()
+func (p Professor) CalculateRating() float64 {
+	float, err := strconv.ParseFloat(p.OverallRating, 64)
+	if err != nil {
+		return 0.0
+	}
+	return float * float64(p.RatingsCount)
 }
 
 func (p Professor) String() string {
-	return fmt.Sprintf("FullName: %s", p.FullName)
-}
-
-//FullName describes a full name of a person i.e. first, middle, and last names
-type FullName struct {
-	firstName     string
-	middleInitial string
-	lastName      string
-}
-
-func (f FullName) String() string {
-	return "{" + f.FormattedString() + "}"
-}
-
-func (f FullName) FormattedString() string {
-	if len(f.middleInitial) > 0 {
-		return fmt.Sprintf("%s %s %s", f.firstName, f.middleInitial, f.lastName)
-	}
-	return fmt.Sprintf("%s %s", f.firstName, f.lastName)
-}
-
-func TrimSpaces(s string) string {
-	var fullString string
-	for i := range s {
-		cursor := s[i]
-		if cursor == ' ' {
-			if s[i+1] == ' ' {
-				continue
-			}
-		}
-		fullString += string(cursor)
-	}
-	return fullString
-}
-
-func GetFullNameFromString(name string) FullName {
-	name = strings.Replace(name, " (P)", "", 1)
-	name = strings.TrimSpace(name)
-	name = TrimSpaces(name)
-
-	fullNameStruct := FullName{}
-
-	split := strings.Split(name, " ")
-
-	if len(split) == 1 {
-		fullNameStruct.firstName = split[0]
-		return fullNameStruct
-	}
-
-	splitLength := len(split)
-
-	fullNameStruct.firstName = split[0]
-	fullNameStruct.lastName = split[splitLength-1]
-
-	for i := 1; i < splitLength-1; i++ {
-		if i == splitLength-2 {
-			fullNameStruct.middleInitial += split[i]
-
-		} else {
-			fullNameStruct.middleInitial += split[i] + " "
-		}
-	}
-
-	if fullNameStruct.FormattedString() != name {
-		fmt.Printf("name=%s\n", name)
-		fmt.Printf("FormattedString=%s\n", fullNameStruct.FormattedString())
-	}
-
-	return fullNameStruct
+	return fmt.Sprintf("Department: %s,  InstitutionName: %s, FirstName: %s, MiddleName: %s, LastName: %s, TeacherID: %d, RatingsCount: %d, RatingClass: %s, OverallRating: %s",
+		p.Department,
+		p.InstitutionName,
+		p.FirstName,
+		p.MiddleName,
+		p.LastName,
+		p.TeacherID,
+		p.RatingsCount,
+		p.RatingClass,
+		p.OverallRating,
+	)
 }
 
 var ProfessorType = graphql.NewObject(graphql.ObjectConfig{
 	Name: "Professor",
 	Fields: graphql.Fields{
-		"schoolId": &graphql.Field{
-			Type: graphql.String,
-		},
 		"department": &graphql.Field{
 			Type: graphql.String,
 		},
-		"rating": &graphql.Field{
+		"ratingClass": &graphql.Field{
 			Type: graphql.String,
-		},
-		"professorId": &graphql.Field{
-			Type: graphql.Int,
 		},
 		"ratingsCount": &graphql.Field{
 			Type: graphql.Int,
 		},
-		"fullName": &graphql.Field{
+		"overallRating": &graphql.Field{
+			Type: graphql.String,
+		},
+		"id": &graphql.Field{
+			Type: graphql.String,
+		},
+		"firstName": &graphql.Field{
+			Type: graphql.String,
+		},
+		"middleName": &graphql.Field{
+			Type: graphql.String,
+		},
+		"lastName": &graphql.Field{
 			Type: graphql.String,
 		},
 	},

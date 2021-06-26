@@ -10,6 +10,7 @@ import (
 	"log"
 	"os"
 	"server/models"
+	"strings"
 )
 
 var (
@@ -54,23 +55,28 @@ func GetProfessorById(id string) models.Professor {
 }
 
 func GetProfessors() []models.Professor {
-	collection := getCollection("professors")
-	cursor, err := collection.Find(context.Background(), bson.M{})
-	if err != nil {
-		log.Fatalln(err)
-	}
-	defer func(cursor *mongo.Cursor, ctx context.Context) {
-		err := cursor.Close(ctx)
+	var professors []models.Professor
+
+	var cursor *mongo.Cursor
+	var err error
+	for _, collectionName := range getAllCollectionsContaining("professors") {
+		collection := getCollection(collectionName)
+		cursor, err = collection.Find(context.Background(), bson.M{})
 		if err != nil {
 			log.Fatalln(err)
 		}
-	}(cursor, context.Background())
 
-	var professors []models.Professor
-
-	if err = cursor.All(context.Background(), &professors); err != nil {
-		log.Fatalln(err)
+		var currentProfessors []models.Professor
+		if err = cursor.All(context.Background(), &currentProfessors); err != nil {
+			log.Fatalln(err)
+		}
+		for _, professor := range currentProfessors {
+			fmt.Printf("professor=%s\n", professor)
+		}
+		professors = append(professors, currentProfessors...)
 	}
+	defer cursor.Close(context.Background())
+
 	fmt.Printf("professors=%s", professors)
 	return professors
 }
@@ -86,4 +92,18 @@ func getDatabaseFromDefault() *mongo.Database {
 
 func getCollection(collection string) mongo.Collection {
 	return *getDatabaseFromDefault().Collection(collection)
+}
+
+func getAllCollectionsContaining(containing string) []string {
+	names, err := getDatabaseFromDefault().ListCollectionNames(context.Background(), bson.D{})
+	if err != nil {
+		log.Fatalln(err)
+	}
+	var collectionNames []string
+	for _, name := range names {
+		if strings.Contains(name, containing) {
+			collectionNames = append(collectionNames, name)
+		}
+	}
+	return collectionNames
 }

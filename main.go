@@ -6,9 +6,11 @@ import (
 	"github.com/graphql-go/handler"
 	"log"
 	"net/http"
+	"os"
 	"server/database"
 	"server/models"
 	"server/schema"
+	"strconv"
 )
 
 func main() {
@@ -31,7 +33,10 @@ func main() {
 	})
 
 	http.Handle("/graphql", h)
-	port := 8080
+	port, err := strconv.ParseInt(os.Getenv("HTTP_PORT"), 0, 16)
+	if err != nil {
+		log.Fatalln(err)
+	}
 	fmt.Printf("Started server on port: %d\n", port)
 	err = http.ListenAndServe(fmt.Sprintf(":%d", port), nil)
 	if err != nil {
